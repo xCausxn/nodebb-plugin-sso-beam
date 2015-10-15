@@ -1,6 +1,6 @@
 {
   "name": "nodebb-plugin-sso-beam",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "NodeBB Beam SSO",
   "main": "library.js",
   "repository": {

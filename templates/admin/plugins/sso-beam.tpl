@@ -8,7 +8,7 @@
 					<a href="https://developer.beam.pro/oauth/manage/">Beam Developer Site</a> and then paste
 					your application details here.
 				</li>
-				<li>The appropriate "Redirect URI" is your NodeBB's URL with `/auth/beam/callback` appended to it.</li>
+				<li>Set your "Hosts" as the domain you access your NodeBB with it (e.g. `forum.mygreatwebsite.com`).</li>
 				<li>Remember to set the global site url.</li>
 			</ol>
 		</div>
