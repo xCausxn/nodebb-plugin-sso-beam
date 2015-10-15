@@ -1,0 +1,35 @@
+{
+  "id": "nodebb-plugin-sso-beam",
+  "name": "NodeBB Beam SSO",
+  "description": "NodeBB Plugin that allows users to login/register via their Beam account.",
+  "url": "https://github.com/alfw/nodebb-plugin-sso-beam",
+  "library": "./library.js",
+  "templates": "templates",
+  "staticDirs": {
+    "images": "public/images"
+  },
+  "less": [
+    "./public/less/beam.less"
+  ],
+  "hooks": [
+    {
+      "hook": "static:app.load",
+      "method": "init"
+    },
+    {
+      "hook": "filter:auth.init",
+      "method": "getStrategy"
+    },
+    {
+      "hook": "filter:admin.header.build",
+      "method": "addMenuItem"
+    },
+    {
+      "hook": "filter:user.delete",
+      "method": "deleteUserData"
+    }
+  ],
+  "scripts": [
+    "static/lib/admin.js"
+  ]
+}

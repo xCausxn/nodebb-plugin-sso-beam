@@ -1,0 +1,42 @@
+{
+  "name": "nodebb-plugin-sso-beam",
+  "version": "1.0.0",
+  "description": "NodeBB Beam SSO",
+  "main": "library.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alfw/nodebb-plugin-sso-beam.git"
+  },
+  "keywords": [
+    "nodebb",
+    "plugin",
+    "beam",
+    "sso",
+    "single sign on",
+    "registration"
+  ],
+  "author": {
+    "name": "Alf W.",
+    "email": "alf@alfw.tv"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/alfw/nodebb-plugin-sso-beam/issues"
+  },
+  "dependencies": {
+    "passport-beam": "^0.2.0"
+  },
+  "nbbpm": {
+    "compatibility": "^0.8.0"
+  },
+  "homepage": "https://github.com/alfw/nodebb-plugin-sso-beam#readme",
+  "scripts": {},
+  "_npmVersion": "2.11.3",
+  "_nodeVersion": "0.12.7",
+  "maintainers": [
+    {
+      "name": "Alf",
+      "email": "alf@alfw.tv"
+    }
+  ]
+}
