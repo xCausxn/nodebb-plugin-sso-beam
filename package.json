@@ -1,6 +1,6 @@
 {
   "name": "nodebb-plugin-sso-beam",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "NodeBB Beam SSO",
   "main": "library.js",
   "repository": {
@@ -24,7 +24,7 @@
     "url": "https://github.com/alfw/nodebb-plugin-sso-beam/issues"
   },
   "dependencies": {
-    "passport-beam": "^0.2.0"
+    "passport-beam": "^1.0.3"
   },
   "nbbpm": {
     "compatibility": "^0.8.0"
