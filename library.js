@@ -43,7 +43,7 @@
 					clientSecret: settings['secret'],
 					callbackURL: nconf.get('url') + '/auth/beam/callback'
 				}, function (accessToken, refreshToken, profile, done) {
-					Beam.login(profile.id, profile.username, profile.email, function (err, user) {
+					Beam.login(profile.id, profile.username, profile.email, profile._raw, function (err, user) {
 						if (err) {
 							return done(err);
 						}
@@ -56,7 +56,7 @@
 					url: '/auth/beam',
 					callbackURL: '/auth/beam/callback',
 					icon: 'icon-beam',
-					scope: settings['scope'] || 'channel:details:self'
+					scope: settings['scope'] || 'user:details:self'
 				});
 			}
 
@@ -64,8 +64,16 @@
 		});
 	};
 
+  Beam.forceAvatar = function(uid,avatar) {
+    User.setUserFields(uid, {
+      uploadedpicture: avatar.avatarUrl || 'https://beam.pro/_latest/img/app/avatars/default.jpg',
+      picture: avatar.avatarUrl || 'https://beam.pro/_latest/img/app/avatars/default.jpg'
+    });
 
-  Beam.login = function (beamid, handle, email, callback) {
+  };
+
+  Beam.login = function (beamid, handle, email, avatar, callback) {
+    avatar = JSON.parse(avatar);
     Beam.getUidByBeamId(beamid, function (err, uid) {
       if (err) {
         return callback(err);
@@ -73,6 +81,12 @@
 
       if (uid !== null) {
         // Existing User
+        meta.settings.get('sso-beam', function (err, settings) {
+          var forceAvatar = settings && settings['forceAvatar'] === "on" ? 1 : 0;
+          if( forceAvatar ) {
+            Beam.forceAvatar(uid, avatar);
+          }
+        });
         callback(null, {
           uid: uid
         });
@@ -81,6 +95,10 @@
         var success = function (uid) {
           meta.settings.get('sso-beam', function (err, settings) {
             var autoConfirm = settings && settings['autoconfirm'] === "on" ? 1 : 0;
+            var forceAvatar = settings && settings['forceAvatar'] === "on" ? 1 : 0;
+            if( forceAvatar ) {
+              Beam.forceAvatar(uid, avatar);
+            }
             User.setUserField(uid, 'email:confirmed', autoConfirm);
             User.setUserField(uid, 'beamid', beamid);
             db.setObjectField('beamid:uid', beamid, uid);
@@ -132,7 +150,8 @@
   };
 
 
-  Beam.deleteUserData = function(uid, callback) {
+  Beam.deleteUserData = function(data, callback) {
+    var uid = data.uid;
     async.waterfall([
       async.apply(User.getUserField, uid, 'beamid'),
       function (oAuthIdToDelete, next) {

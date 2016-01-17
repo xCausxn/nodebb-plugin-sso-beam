@@ -31,6 +31,12 @@
 					<span class="mdl-switch__label">Skip email verification for people who register using SSO?</span>
 				</label>
 			</div>
+			<div class="checkbox">
+				<label class="mdl-switch mdl-js-switch mdl-js-ripple-effect">
+					<input type="checkbox" class="mdl-switch__input" name="forceAvatar">
+					<span class="mdl-switch__label">Enforce Beam Avatars on login / signup? </span>
+				</label>
+			</div>
 		</form>
 	</div>
 </div>
