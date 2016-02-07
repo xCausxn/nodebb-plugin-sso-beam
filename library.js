@@ -1,172 +1,172 @@
 (function (module) {
-	"use strict";
+    "use strict";
 
-	var User = module.parent.require('./user'),
-		meta = module.parent.require('./meta'),
-		db = module.parent.require('../src/database'),
-		passport = module.parent.require('passport'),
-		passportBeam = require('passport-beam').OAuth2Strategy,
-		fs = module.parent.require('fs'),
-		path = module.parent.require('path'),
-		nconf = module.parent.require('nconf'),
-		async = module.parent.require('async');
+    const User = module.parent.require('./user');
+    const meta = module.parent.require('./meta');
+    const db = module.parent.require('../src/database');
+    const passport = module.parent.require('passport');
+    const PassportBeam = require('passport-beam').OAuth2Strategy;
+    const fs = module.parent.require('fs');
+    const path = module.parent.require('path');
+    const nconf = module.parent.require('nconf');
+    const async = module.parent.require('async');
 
-	var constants = Object.freeze({
-		'name': "Beam SSO",
-		'admin': {
-			'route': '/plugins/sso-beam',
-			'icon': 'icon-beam'
-		}
-	});
-
-
-	var Beam = {};
-
-	Beam.init = function (data, callback) {
-		function render(req, res, next) {
-			res.render('admin/plugins/sso-beam', {});
-		}
-
-		data.router.get('/admin/plugins/sso-beam', data.middleware.admin.buildHeader, render);
-		data.router.get('/api/admin/plugins/sso-beam', render);
-
-		callback();
-	};
+    const constants = {
+        'name': "Beam SSO",
+        'admin': {
+            'route': '/plugins/sso-beam',
+            'icon': 'icon-beam'
+        }
+    };
 
 
-	Beam.getStrategy = function (strategies, callback) {
-		meta.settings.get('sso-beam', function(err, settings) {
-			if (!err && settings['id'] && settings['secret']) {
+    const Beam = {};
 
-				passport.use(new passportBeam({
-					clientID: settings['id'],
-					clientSecret: settings['secret'],
-					callbackURL: nconf.get('url') + '/auth/beam/callback'
-				}, function (accessToken, refreshToken, profile, done) {
-					Beam.login(profile.id, profile.username, profile.email, profile._raw, function (err, user) {
-						if (err) {
-							return done(err);
-						}
-						done(null, user);
-					});
-				}));
+    Beam.init = (data, callback) => {
+        function render(req, res, next) {
+            res.render('admin/plugins/sso-beam', {});
+        }
 
-				strategies.push({
-					name: 'beam',
-					url: '/auth/beam',
-					callbackURL: '/auth/beam/callback',
-					icon: 'icon-beam',
-					scope: settings['scope'] || 'user:details:self'
-				});
-			}
+        data.router.get('/admin/plugins/sso-beam', data.middleware.admin.buildHeader, render);
+        data.router.get('/api/admin/plugins/sso-beam', render);
 
-			callback(null, strategies);
-		});
-	};
+        callback();
+    };
 
-  Beam.forceAvatar = function(uid,avatar) {
-    User.setUserFields(uid, {
-      uploadedpicture: avatar.avatarUrl || 'https://beam.pro/_latest/img/app/avatars/default.jpg',
-      picture: avatar.avatarUrl || 'https://beam.pro/_latest/img/app/avatars/default.jpg'
-    });
 
-  };
+    Beam.getStrategy = (strategies, callback) => {
+        meta.settings.get('sso-beam', (err, settings) => {
+            if (!err && settings['id'] && settings['secret']) {
 
-  Beam.login = function (beamid, handle, email, avatar, callback) {
-    avatar = JSON.parse(avatar);
-    Beam.getUidByBeamId(beamid, function (err, uid) {
-      if (err) {
-        return callback(err);
-      }
+                passport.use(new PassportBeam({
+                    clientID: settings['id'],
+                    clientSecret: settings['secret'],
+                    callbackURL: nconf.get('url') + '/auth/beam/callback'
+                }, (accessToken, refreshToken, profile, done) => {
+                    Beam.login(profile.id, profile.username, profile.email, profile._raw, (err, user) => {
+                        if (err) {
+                            return done(err);
+                        }
+                        done(null, user);
+                    });
+                }));
 
-      if (uid !== null) {
-        // Existing User
-        meta.settings.get('sso-beam', function (err, settings) {
-          var forceAvatar = settings && settings['forceAvatar'] === "on" ? 1 : 0;
-          if( forceAvatar ) {
-            Beam.forceAvatar(uid, avatar);
-          }
-        });
-        callback(null, {
-          uid: uid
-        });
-      } else {
-        // New User
-        var success = function (uid) {
-          meta.settings.get('sso-beam', function (err, settings) {
-            var autoConfirm = settings && settings['autoconfirm'] === "on" ? 1 : 0;
-            var forceAvatar = settings && settings['forceAvatar'] === "on" ? 1 : 0;
-            if( forceAvatar ) {
-              Beam.forceAvatar(uid, avatar);
+                strategies.push({
+                    name: 'beam',
+                    url: '/auth/beam',
+                    callbackURL: '/auth/beam/callback',
+                    icon: 'icon-beam',
+                    scope: settings['scope'] || 'user:details:self'
+                });
             }
-            User.setUserField(uid, 'email:confirmed', autoConfirm);
-            User.setUserField(uid, 'beamid', beamid);
-            db.setObjectField('beamid:uid', beamid, uid);
 
-            callback(null, {
-              uid: uid
-            });
-
-          });
-        };
-
-        User.getUidByEmail(email, function(err, uid) {
-          if (err) {
-            return callback(err);
-          }
-
-          if (!uid) {
-            User.create({username: handle, email: email}, function (err, uid) {
-              if (err) {
-                return callback(err);
-              }
-              success(uid);
-            });
-          } else {
-            success(uid); // Existing account -- merge
-          }
+            callback(null, strategies);
         });
-      }
-    });
-  };
+    };
 
-  Beam.getUidByBeamId = function (beamid, callback) {
-    db.getObjectField('beamid:uid', beamid, function(err, uid) {
-      if (err) {
-        return callback(err);
-      }
-      callback(null, uid);
-    });
-  };
+    Beam.forceAvatar = (uid, avatar) => {
+        User.setUserFields(uid, {
+            uploadedpicture: avatar.avatarUrl || 'https://beam.pro/_latest/img/app/avatars/default.jpg',
+            picture: avatar.avatarUrl || 'https://beam.pro/_latest/img/app/avatars/default.jpg'
+        });
 
-  Beam.addMenuItem = function (custom_header, callback) {
-    custom_header.authentication.push({
-      "route": constants.admin.route,
-      "icon": constants.admin.icon,
-      "name": constants.name
-    });
+    };
 
-    callback(null, custom_header);
-  };
+    Beam.login = (beamid, handle, email, avatar, callback) => {
+        avatar = JSON.parse(avatar);
+        Beam.getUidByBeamId(beamid, (err, uid) => {
+            if (err) {
+                return callback(err);
+            }
+
+            if (uid !== null) {
+                // Existing User
+                meta.settings.get('sso-beam', (err, settings) => {
+                    var forceAvatar = settings && settings['forceAvatar'] === "on" ? 1 : 0;
+                    if (forceAvatar) {
+                        Beam.forceAvatar(uid, avatar);
+                    }
+                });
+                callback(null, {
+                    uid: uid
+                });
+            } else {
+                // New User
+                const success = (uid) => {
+                    meta.settings.get('sso-beam', (err, settings) => {
+                        const autoConfirm = (settings && settings['autoconfirm'] === "on") ? 1 : 0;
+                        const forceAvatar = (settings && settings['forceAvatar'] === "on") ? 1 : 0;
+                        if (forceAvatar) {
+                            Beam.forceAvatar(uid, avatar);
+                        }
+                        User.setUserField(uid, 'email:confirmed', autoConfirm);
+                        User.setUserField(uid, 'beamid', beamid);
+                        db.setObjectField('beamid:uid', beamid, uid);
+
+                        callback(null, {
+                            uid: uid
+                        });
+
+                    });
+                };
+
+                User.getUidByEmail(email, (err, uid) => {
+                    if (err) {
+                        return callback(err);
+                    }
+
+                    if (!uid) {
+                        User.create({ username: handle, email: email }, (err, uid) => {
+                            if (err) {
+                                return callback(err);
+                            }
+                            success(uid);
+                        });
+                    } else {
+                        success(uid); // Existing account -- merge
+                    }
+                });
+            }
+        });
+    };
+
+    Beam.getUidByBeamId = (beamid, callback) => {
+        db.getObjectField('beamid:uid', beamid, (err, uid) => {
+            if (err) {
+                return callback(err);
+            }
+            callback(null, uid);
+        });
+    };
+
+    Beam.addMenuItem = (custom_header, callback) => {
+        custom_header.authentication.push({
+            "route": constants.admin.route,
+            "icon": constants.admin.icon,
+            "name": constants.name
+        });
+
+        callback(null, custom_header);
+    };
 
 
-  Beam.deleteUserData = function(data, callback) {
-    var uid = data.uid;
-    async.waterfall([
-      async.apply(User.getUserField, uid, 'beamid'),
-      function (oAuthIdToDelete, next) {
-        db.deleteObjectField('beamid:uid', oAuthIdToDelete, next);
-      }
-    ], function(err) {
-      if (err) {
-        winston.error('[sso-beam] Could not remove OAuthId data for uid ' + uid + '. Error: ' + err);
-        return callback(err);
-      }
-      callback(null, uid);
-    });
-  };
+    Beam.deleteUserData = (data, callback) => {
+        const uid = data.uid;
+        async.waterfall([
+            async.apply(User.getUserField, uid, 'beamid'),
+            (oAuthIdToDelete, next) => {
+                db.deleteObjectField('beamid:uid', oAuthIdToDelete, next);
+            }
+        ], (err) => {
+            if (err) {
+                console.error(`[sso-beam] Could not remove OAuthId data for uid ${uid}. Error: ${err}`);
+                return callback(err);
+            }
+            callback(null, uid);
+        });
+    };
 
 
 
-	module.exports = Beam;
-}(module));
+    module.exports = Beam;
+} (module));
